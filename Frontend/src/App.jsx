@@ -24,6 +24,9 @@ export default function App() {
     } else if (toParam) {
       setTargetHandle(toParam.trim());
       setCurrentView("user");
+    } else if (searchParams.get("view") === "admin") {
+      setCurrentView("admin");
+      setTargetHandle("");
     } else if (path === "/admin") {
       setCurrentView("admin");
       setTargetHandle("");
@@ -41,23 +44,17 @@ export default function App() {
   // Check if admin is authenticated on load
   useEffect(() => {
     const checkAuth = async () => {
-      const token = api.getToken();
-      if (!token) {
-        setCheckingAuth(false);
-        return;
-      }
-
       try {
-        const data = await api.getMe();
-        if (data.user) {
+        const data = await api.restoreSession();
+        if (data?.user) {
           setAdminUser(data.user);
-        } else {
-          api.setToken(null);
+          if (window.location.pathname === '/' && !window.location.search) {
+            setCurrentView('admin');
+          }
         }
       } catch (err) {
         console.warn("Session expired:", err.message);
-        api.setToken(null);
-        setAdminUser(null);
+        if (!api.getToken()) setAdminUser(null);
       } finally {
         setCheckingAuth(false);
       }
@@ -67,12 +64,16 @@ export default function App() {
   }, []);
 
   const handleLoginSuccess = (user) => {
+    window.history.replaceState({}, '', '/?view=admin');
+    setTargetHandle('');
     setAdminUser(user);
     setCurrentView("admin");
   };
 
   const handleLogout = async () => {
     await api.logout();
+    window.history.replaceState({}, '', '/');
+    setTargetHandle('');
     setAdminUser(null);
     setCurrentView("user");
   };
@@ -96,6 +97,9 @@ export default function App() {
         setView={(v) => {
           if (v === "user") {
             window.history.pushState({}, "", "/");
+            setTargetHandle("");
+          } else if (v === "admin") {
+            window.history.pushState({}, "", "/?view=admin");
             setTargetHandle("");
           }
           setCurrentView(v);

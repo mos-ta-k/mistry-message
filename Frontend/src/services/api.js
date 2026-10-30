@@ -10,6 +10,7 @@ export const API_URL = normalizedApiUrl.endsWith("/api")
 class ApiService {
   constructor() {
     this.token = localStorage.getItem('admin_token') || null;
+    this.refreshPromise = null;
   }
 
   setToken(token) {
@@ -25,7 +26,46 @@ class ApiService {
     return this.token;
   }
 
-  async request(endpoint, options = {}) {
+  async refreshAccessToken() {
+    if (!this.refreshPromise) {
+      this.refreshPromise = (async () => {
+        const response = await fetch(`${API_URL}/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            this.setToken(null);
+            return false;
+          }
+          throw new Error(data.message || `Request failed (${response.status})`);
+        }
+
+        if (!data.accessToken) {
+          throw new Error('The session refresh response did not include an access token.');
+        }
+
+        this.setToken(data.accessToken);
+        return true;
+      })().finally(() => {
+        this.refreshPromise = null;
+      });
+    }
+
+    return this.refreshPromise;
+  }
+
+  async restoreSession() {
+    if (!this.token && !(await this.refreshAccessToken())) {
+      return null;
+    }
+    return this.getMe();
+  }
+
+  async request(endpoint, options = {}, hasRetried = false) {
     const url = `${API_URL}${endpoint}`;
     const headers = {
       'Content-Type': 'application/json',
@@ -46,8 +86,13 @@ class ApiService {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
+        const isAuthenticationRequest = /^\/auth\/(login|register|verify|resend-code|refresh|logout)(\/|$)/.test(endpoint);
+        if (response.status === 401 && this.token && !hasRetried && !isAuthenticationRequest) {
+          if (await this.refreshAccessToken()) {
+            return this.request(endpoint, options, true);
+          }
+        }
         if (response.status === 401) {
-          // Token expired or invalid — clear it
           this.setToken(null);
         }
         throw new Error(data.message || `Request failed (${response.status})`);
@@ -55,7 +100,7 @@ class ApiService {
 
       return data;
     } catch (err) {
-      console.error(`API Error [${endpoint}]:`, err);
+      if (!hasRetried) console.error(`API Error [${endpoint}]:`, err);
       throw err;
     }
   }
