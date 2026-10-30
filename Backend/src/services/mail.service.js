@@ -59,19 +59,66 @@ const createTransporter = () => {
   };
 };
 
+const getMailErrorDetails = (error) => ({
+  code: error.code,
+  responseCode: error.responseCode,
+  command: error.command,
+  message: error.message,
+});
+
+const sendWithResend = async ({ apiKey, from, email, subject, text, html }) => {
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [email],
+      subject,
+      text,
+      html,
+      attachments: [{
+        filename: "mistry-logo.svg",
+        content: Buffer.from(logoSvg).toString("base64"),
+        content_id: "mistry-logo",
+      }],
+    }),
+    signal: AbortSignal.timeout(15_000),
+  });
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const error = new Error(result.message || `Resend request failed (${response.status})`);
+    error.code = "ERESEND";
+    error.responseCode = response.status;
+    error.command = "SEND";
+    throw error;
+  }
+
+  return result;
+};
+
 /**
  * Send a 6-digit verification code to a new user.
  */
 export const sendVerificationEmail = async (email, username, code) => {
-  const { mailUser, transporter } = createTransporter();
-  const safeUsername = escapeHtml(username);
   try {
-    const result = await transporter.sendMail({
-      from: `"Mistry Message" <${mailUser}>`,
-      to: email,
-      subject: "Your verification code",
-      text: `Hi ${username},\n\nYour verification code is: ${code}\n\nIt expires in 15 minutes.\n\nIf you didn't register, ignore this email.`,
-      html: `<!doctype html>
+    const resendApiKey = getEnv("RESEND_API_KEY");
+    const mailUser = getEnv("MAIL_USER") || getEnv("GMAIL_USER");
+    const from = resendApiKey
+      ? getEnv("MAIL_FROM")
+      : `"Mistry Message" <${mailUser}>`;
+
+    if (resendApiKey && !from) {
+      throw new ApiError(503, "MAIL_FROM must be set when using Resend.");
+    }
+
+    const safeUsername = escapeHtml(username);
+    const subject = "Your verification code";
+    const text = `Hi ${username},\n\nYour verification code is: ${code}\n\nIt expires in 15 minutes.\n\nIf you didn't register, ignore this email.`;
+    const html = `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -138,24 +185,53 @@ export const sendVerificationEmail = async (email, username, code) => {
       </tr>
     </table>
   </body>
-</html>`,
-      attachments: [{
-        filename: "mistry-logo.svg",
-        content: logoSvg,
-        contentType: "image/svg+xml",
-        cid: "mistry-logo",
-      }],
-    });
+  </html>`;
+    let messageId;
+    let provider;
 
-    if (!result.accepted.some((recipient) => recipient.toLowerCase() === email.toLowerCase())) {
-      throw new Error("SMTP did not accept the verification email recipient");
+    if (resendApiKey) {
+      const result = await sendWithResend({
+        apiKey: resendApiKey,
+        from,
+        email,
+        subject,
+        text,
+        html,
+      });
+      messageId = result.id;
+      provider = "Resend";
+    } else {
+      const { mailUser, transporter } = createTransporter();
+      const result = await transporter.sendMail({
+        from: `"Mistry Message" <${mailUser}>`,
+        to: email,
+        subject,
+        text,
+        html,
+        attachments: [{
+          filename: "mistry-logo.svg",
+          content: logoSvg,
+          contentType: "image/svg+xml",
+          cid: "mistry-logo",
+        }],
+      });
+
+      if (!result.accepted.some((recipient) => recipient.toLowerCase() === email.toLowerCase())) {
+        throw new Error("SMTP did not accept the verification email recipient");
+      }
+
+      messageId = result.messageId;
+      provider = "SMTP";
     }
 
     console.info(
-      `Verification email accepted by SMTP for ${maskEmail(email)} (message ID: ${result.messageId})`
+      `Verification email accepted by ${provider} for ${maskEmail(email)} (message ID: ${messageId})`
     );
   } catch (error) {
-    console.error(`Verification email delivery failed for ${maskEmail(email)}:`, error.message);
+    console.error(
+      `Verification email delivery failed for ${maskEmail(email)}:`,
+      getMailErrorDetails(error)
+    );
     throw new ApiError(503, "Could not send the verification email. Please try again later.");
   }
 };
