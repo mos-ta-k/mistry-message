@@ -36,6 +36,7 @@ const app = express();
 
 app.use(helmet());
 
+<<<<<<< HEAD
 const productionClientOrigin = "https://mistry-message-frontend.onrender.com";
 const developmentOrigins =
   process.env.NODE_ENV === "production"
@@ -80,6 +81,9 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+=======
+app.use(cors({origin: "https://mistry-message-frontend.onrender.com/"}));
+>>>>>>> 751027216ae299bd9c8c7fe80d4cfbd41f8e4867
 
 app.use(express.json());
 app.use(morgan("dev"));
