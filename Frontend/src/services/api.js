@@ -87,10 +87,15 @@ class ApiService {
   }
 
   async adminRegister(username, email, password) {
-    return this.request('/auth/register', {
+    const data = await this.request('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ username, email, password }),
     });
+    const token = data.accessToken || data.user?.accessToken;
+    if (token) {
+      this.setToken(token);
+    }
+    return data;
   }
 
   async adminVerify(email, code) {

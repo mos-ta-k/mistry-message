@@ -8,9 +8,9 @@ import {
   findUserById,
   findUserByUsername,
   findUserByUsernameOrEmail,
+  activateUnverifiedUser,
   verifyUser,
   setVerifyCode,
-  deleteUnverifiedUser,
   updatePassword,
 } from "../models/user.model.js";
 import {
@@ -50,41 +50,35 @@ export const issueTokens = async (userId, role, res) => {
 
 // Auth operations
 
-export const registerUser = async ({ username, email, password }) => {
-  const existing = await findUserByEmail(email);
-  if (existing) throw new ApiError(409, "Email already in use");
+export const registerUser = async ({ username, email, password }, res) => {
+  let user;
+  const existingEmail = await findUserByEmail(email);
 
-  const existingUsername = await findUserByUsername(username);
-  if (existingUsername) throw new ApiError(409, "Username already taken");
+  if (existingEmail) {
+    const sameAccount =
+      !existingEmail.is_verified &&
+      existingEmail.username === username &&
+      await comparePassword(password, existingEmail.password);
+    if (!sameAccount) throw new ApiError(409, "Email already in use");
 
-  const code = generateVerifyCode();
-  const expiresAt = new Date(Date.now() + VERIFY_CODE_EXPIRY_MIN * 60 * 1000);
-  const hashed    = await hashPassword(password);
+    user = await activateUnverifiedUser(existingEmail.id);
+    if (!user) throw new ApiError(409, "Account could not be activated. Please try again.");
+  } else {
+    const existingUsername = await findUserByUsername(username);
+    if (existingUsername) throw new ApiError(409, "Username already taken");
 
-  const isVerified = false;
-
-  const user = await createUser({
-    username,
-    email,
-    password: hashed,
-    verifyCode: code,
-    verifyCodeExpiry: expiresAt,
-    role: "user",
-    isVerified,
-  });
-
-  try {
-    await sendVerificationEmail(email, username, code);
-  } catch (error) {
-    await deleteUnverifiedUser(user.id);
-    throw error;
+    const hashed = await hashPassword(password);
+    user = await createUser({
+      username,
+      email,
+      password: hashed,
+      role: "admin",
+      isVerified: true,
+    });
   }
 
-  return {
-    requiresVerification: true,
-    email: user.email,
-    username: user.username,
-  };
+  const accessToken = await issueTokens(user.id, user.role, res);
+  return { accessToken, user };
 };
 
 export const verifyEmail = async ({ email, code }, res) => {

@@ -110,6 +110,22 @@ export const verifyUser = async (email, code) => {
   return rows[0] || null;
 };
 
+export const activateUnverifiedUser = async (id) => {
+  const { rows } = await pool.query(
+    `UPDATE users
+     SET is_verified = TRUE,
+         role = 'admin',
+         verify_code = NULL,
+         verify_code_expiry = NULL,
+         verify_resend_count = 0,
+         updated_at = NOW()
+     WHERE id = $1 AND is_verified = FALSE
+     RETURNING id, username, email, is_verified, is_accepting_messages, role, created_at`,
+    [id]
+  );
+  return rows[0] || null;
+};
+
 /** Set a fresh verify code (tracks resend count per hour) */
 export const setVerifyCode = async (email, code, expiresAt) => {
   const { rows } = await pool.query(

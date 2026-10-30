@@ -2,13 +2,12 @@ import asyncHandler from "../utils/asyncHandler.js";
 import * as authService from "../services/auth.service.js";
 
 export const register = asyncHandler(async (req, res) => {
-  const result = await authService.registerUser(req.body);
+  const result = await authService.registerUser(req.body, res);
   res.status(201).json({
     success: true,
-    message: "Registration successful. Please enter the verification code sent to your email.",
-    requiresVerification: true,
-    email: result.email,
-    username: result.username,
+    message: "Account created successfully.",
+    accessToken: result.accessToken,
+    user: result.user,
   });
 });
 
@@ -16,7 +15,7 @@ export const verify = asyncHandler(async (req, res) => {
   const result = await authService.verifyEmail(req.body, res);
   res.status(200).json({
     success: true,
-    message: "Email verified successfully! You are now logged in.",
+    message: " You are now logged in.",
     accessToken: result.accessToken,
     user: result.user,
   });
