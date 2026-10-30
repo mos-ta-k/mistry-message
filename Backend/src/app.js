@@ -37,7 +37,15 @@ const app = express();
 app.use(helmet());
 
 const productionClientOrigin = "https://mistry-message-frontend.onrender.com";
-
+const developmentOrigins =
+  process.env.NODE_ENV === "production"
+    ? []
+    : [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+      ];
 const configuredOrigins = (process.env.CLIENT_URL || "")
   .split(",")
   .map((origin) => origin.trim())
