@@ -1,8 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Send, Shield, LogOut, Lock } from 'lucide-react';
 
 export default function Navbar({ currentView, setView, adminUser, onLogout }) {
+  const [logoutError, setLogoutError] = useState('');
+
+  const handleLogout = async () => {
+    setLogoutError('');
+    try {
+      await onLogout();
+    } catch (error) {
+      setLogoutError(error.message || 'Could not sign out. Please try again.');
+      window.setTimeout(() => setLogoutError(''), 4000);
+    }
+  };
+
   return (
+    <>
     <header className="site-header" style={{
       background: '#ffffff',
       borderBottom: '1px solid #e2e8f0',
@@ -70,7 +83,7 @@ export default function Navbar({ currentView, setView, adminUser, onLogout }) {
               </span>
 
               <button
-                onClick={onLogout}
+                onClick={handleLogout}
                 className="btn-danger"
                 style={{ padding: '5px 10px', fontSize: '12px' }}
                 title="Log out"
@@ -83,5 +96,7 @@ export default function Navbar({ currentView, setView, adminUser, onLogout }) {
         </div>
       </div>
     </header>
+    {logoutError && <div className="toast" role="alert">{logoutError}</div>}
+    </>
   );
 }

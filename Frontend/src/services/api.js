@@ -92,7 +92,7 @@ class ApiService {
             return this.request(endpoint, options, true);
           }
         }
-        if (response.status === 401) {
+        if (response.status === 401 && endpoint !== '/auth/logout') {
           this.setToken(null);
         }
         throw new Error(data.message || `Request failed (${response.status})`);
@@ -167,13 +167,8 @@ class ApiService {
   }
 
   async logout() {
-    try {
-      await this.request('/auth/logout', { method: 'POST' });
-    } catch {
-      // ignore
-    } finally {
-      this.setToken(null);
-    }
+    await this.request('/auth/logout', { method: 'POST' });
+    this.setToken(null);
   }
 
   // --- Admin Dashboard Endpoints ---
