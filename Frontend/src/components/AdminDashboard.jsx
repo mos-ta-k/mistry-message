@@ -9,7 +9,9 @@ import {
   Edit2,
   CheckCheck,
   LayoutGrid,
-  List as ListIcon
+  List as ListIcon,
+  Trash2,
+  X
 } from 'lucide-react';
 import { api } from '../services/api';
 import MessageCard from './Cards';
@@ -26,6 +28,8 @@ export default function AdminDashboard({ adminUser, onUserUpdated, onSessionExpi
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [error, setError] = useState('');
+  const [deleteMessageId, setDeleteMessageId] = useState(null);
+  const [deletingMessage, setDeletingMessage] = useState(false);
 
   // Custom Handle Editing
   const [editingHandle, setEditingHandle] = useState(false);
@@ -59,6 +63,17 @@ export default function AdminDashboard({ adminUser, onUserUpdated, onSessionExpi
   useEffect(() => {
     loadData();
   }, [filterStatus]);
+
+  useEffect(() => {
+    if (deleteMessageId === null || deletingMessage) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setDeleteMessageId(null);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [deleteMessageId, deletingMessage]);
 
   // Toggle Message Intake
   const handleToggleAccepting = async () => {
@@ -110,18 +125,26 @@ export default function AdminDashboard({ adminUser, onUserUpdated, onSessionExpi
   };
 
   // Delete message
-  const handleDeleteMessage = async (id) => {
-    if (!window.confirm('Delete this message?')) return;
+  const handleDeleteMessage = (id) => {
+    setDeleteMessageId(id);
+  };
+
+  const confirmDeleteMessage = async () => {
+    if (deleteMessageId === null || deletingMessage) return;
     try {
-      await api.deleteMessage(id);
-      setMessages((prev) => prev.filter((m) => m.id !== id));
+      setDeletingMessage(true);
+      await api.deleteMessage(deleteMessageId);
+      setMessages((prev) => prev.filter((m) => m.id !== deleteMessageId));
       setStats((prev) => ({
         ...prev,
         total: Math.max(0, prev.total - 1),
       }));
+      setDeleteMessageId(null);
       showToast('Message deleted');
     } catch (err) {
       showToast(`Error: ${err.message}`);
+    } finally {
+      setDeletingMessage(false);
     }
   };
 
@@ -167,6 +190,62 @@ export default function AdminDashboard({ adminUser, onUserUpdated, onSessionExpi
       {toastMessage && (
         <div className="toast">
           <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {deleteMessageId !== null && (
+        <div
+          className="confirm-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !deletingMessage) {
+              setDeleteMessageId(null);
+            }
+          }}
+        >
+          <section
+            className="confirm-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-message-title"
+            aria-describedby="delete-message-description"
+          >
+            <div className="confirm-dialog-icon">
+              <Trash2 size={20} />
+            </div>
+            <button
+              type="button"
+              className="confirm-dialog-close"
+              aria-label="Cancel delete"
+              onClick={() => setDeleteMessageId(null)}
+              disabled={deletingMessage}
+            >
+              <X size={18} />
+            </button>
+            <h2 id="delete-message-title">Delete this message?</h2>
+            <p id="delete-message-description">
+              This message will be permanently removed from your inbox. This action cannot be undone.
+            </p>
+            <div className="confirm-dialog-actions">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setDeleteMessageId(null)}
+                disabled={deletingMessage}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-danger confirm-delete-button"
+                onClick={confirmDeleteMessage}
+                disabled={deletingMessage}
+              >
+                <Trash2 size={15} />
+                {deletingMessage ? 'Deleting...' : 'Delete message'}
+              </button>
+            </div>
+          </section>
         </div>
       )}
 

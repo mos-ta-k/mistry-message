@@ -355,7 +355,8 @@ export default function MessageCard({
         style={{
           padding: '12px 16px',
           background: message.is_read ? '#ffffff' : '#fcfcfd',
-          borderLeft: message.is_read ? '3px solid #e2e8f0' : '3px solid #0f172a',
+          borderLeft: '1px solid #e6e8e2',
+          boxShadow: '0 2px 8px rgba(25, 55, 53, 0.06)',
           display: 'flex',
           alignItems: 'flex-start',
           justifyContent: 'space-between',
@@ -461,7 +462,8 @@ export default function MessageCard({
       style={{
         padding: '18px 20px',
         background: message.is_read ? '#ffffff' : '#fcfcfd',
-        borderLeft: message.is_read ? '3px solid #cbd5e1' : '3px solid #0f172a',
+        borderLeft: '1px solid #e6e8e2',
+        boxShadow: '0 2px 8px rgba(25, 55, 53, 0.06)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
