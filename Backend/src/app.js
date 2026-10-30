@@ -34,6 +34,7 @@ console.log("Database tables verified & initialized successfully.");
 
 const app = express();
 
+app.set("trust proxy", 1);
 app.use(helmet());
 
 const productionClientOrigin = "https://mistry-message-frontend.onrender.com";
