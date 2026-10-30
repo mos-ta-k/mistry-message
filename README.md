@@ -101,13 +101,13 @@ Alternatively, configure Gmail OAuth with `GMAIL_USER`,
 
 ### Configure the frontend API URL
 
-The frontend reads `VITE_APP_URL` as the API base URL, then appends endpoint
-paths such as `/auth/login`. Because the backend mounts routes below `/api`,
-the frontend adds `/api` automatically if it is omitted. For local development,
-create `Frontend/.env`:
+The frontend reads `VITE_API_URL` (or the legacy `VITE_APP_URL`) as the API
+base URL, then appends endpoint paths such as `/auth/login`. Because the backend
+mounts routes below `/api`, the frontend adds `/api` automatically if it is
+omitted. For local development, create or update `Frontend/.env`:
 
 ```dotenv
-VITE_APP_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5000
 ```
 
 Restart Vite after changing environment variables. Vite embeds this value into
@@ -135,8 +135,8 @@ Open the Vite URL shown in the frontend terminal (normally
 unset.
 
 The backend initializes its database tables during startup. The frontend
-provides a Vite proxy for `/api`, but its API client uses `VITE_APP_URL`; the
-configuration above explicitly points that client at the backend API.
+provides a Vite proxy for `/api`; the API client uses `VITE_API_URL` (or its
+legacy alias) to target the backend API.
 
 ## Main pages
 
@@ -160,8 +160,9 @@ dashboard to copy your public link and manage received messages.
 - Configure production secrets in the hosting provider's secret manager.
 - Set the backend's `CLIENT_URL` to the exact public frontend origin (for
   example, `https://mistry-message-frontend.onrender.com`) and set
-  `NODE_ENV=production`. Set frontend `VITE_APP_URL` to the backend public URL;
-  `/api` may be included or omitted.
+  `NODE_ENV=production`. Set frontend `VITE_API_URL` to the backend public URL;
+  `/api` may be included or omitted. `VITE_APP_URL` is also accepted as an
+  alternative variable name.
 - The backend still has a message endpoint without its stricter route-specific
   limiter. Review the backend's current implementation
   caveats in [backend documentation](./Backend/README.md#current-implementation-caveats)

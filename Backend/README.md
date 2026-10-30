@@ -999,8 +999,8 @@ configuration outside the repository.
    comma-separated origins), the deployed frontend origin, and local
    development origins only outside production. It enables credentials and
    normalizes configured URLs to browser origins. In production, set `CLIENT_URL`
-   to the frontend's exact public origin; the frontend must set
-   `VITE_APP_URL` to the backend public URL and be rebuilt after that value
+   to the frontend's exact public origin; the frontend must set `VITE_API_URL`
+   (or `VITE_APP_URL`) to the backend public URL and be rebuilt after that value
    changes.
 3. **Message abuse protection:** the frontend's `/api/messages` submission
    route has only the global limiter. The stricter `messageLimiter` applies to

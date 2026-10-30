@@ -14,7 +14,7 @@ const errorHandler = (err, req, res, next) => {
 
   // Zod error (shouldn't reach here, handled by validate middleware, but just in case)
   if (err.name === "ZodError") {
-    return res.status(400).json({ success: false, message: err.errors.map((e) => e.message).join(", ") });
+    return res.status(400).json({ success: false, message: err.issues.map((issue) => issue.message).join(", ") });
   }
 
   // Unknown / programming error — log and send generic message

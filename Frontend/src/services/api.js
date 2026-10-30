@@ -1,4 +1,7 @@
-const configuredApiUrl = import.meta.env.VITE_APP_URL || "http://localhost:5000";
+const configuredApiUrl =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_APP_URL ||
+  "http://localhost:5000";
 const normalizedApiUrl = configuredApiUrl.replace(/\/+$/, "");
 export const API_URL = normalizedApiUrl.endsWith("/api")
   ? normalizedApiUrl
