@@ -14,8 +14,9 @@
 
 ## Quick start
 
-The backend is an ES module Node.js application. Its package currently defines
-the `dev` script, but no `start`, `build`, or test script.
+The backend is an ES module Node.js application. It uses Node.js 18.11 or later;
+the `dev` script uses Node's built-in watch mode and `start` runs the production
+server without a file watcher. There are no dedicated `build` or test scripts.
 
 ```powershell
 cd Backend
@@ -23,9 +24,15 @@ npm install
 npm run dev
 ```
 
+For production, set production environment variables and run:
+
+```powershell
+npm start
+```
+
 The application initializes database tables before serving requests, so a
 reachable PostgreSQL database and valid environment configuration are required
-at startup. The current server listens on port `5000`.
+at startup. The server listens on `PORT`, falling back to `5000`.
 
 ## Configuration
 
@@ -64,7 +71,7 @@ MAIL_PORT=587
 | `MAIL_HOST`                                                     | Optional SMTP host; defaults to `smtp.gmail.com`.                                                                                             |
 | `MAIL_PORT`                                                     | Optional SMTP port; defaults to `587`; port `465` enables secure SMTP.                                                                        |
 | `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` | Optional Gmail OAuth2 credentials; all three are needed together.                                                                             |
-| `PORT`                                                          | Read into a constant by `server.js`, but currently ignored by `app.listen`, which uses port `5000`.                                           |
+| `PORT`                                                          | HTTP port used by `server.js`; defaults to `5000` when unset or invalid.                                                                      |
 | `JWT_REFRESH_SECRET`                                            | May exist in deployment configuration, but the current refresh-token implementation uses opaque random tokens and does not use this variable. |
 
 `database.js` creates a shared `pg.Pool` using the five database variables. It
@@ -986,8 +993,8 @@ with a JSON message.
 These notes describe source behavior; they are not claims about deployment
 configuration outside the repository.
 
-1. **Port:** `server.js` calculates a value from `process.env.PORT` but calls
-   `app.listen(5000, ...)`; the environment port is ignored.
+1. **Port:** `server.js` listens on `process.env.PORT` when it is a valid
+   numeric value and otherwise falls back to `5000`.
 2. **CORS:** `app.js` includes local origins and `CLIENT_URL`, but the callback
    currently returns success for every origin. Credentials are enabled. Restrict
    accepted origins before production use.
@@ -1008,5 +1015,5 @@ configuration outside the repository.
    message on failure. Consider returning a generic response in production.
 8. **Database migrations:** startup creates tables if missing but is not a
    complete schema migration system.
-9. **Test/build scripts:** the backend package currently exposes only `dev`;
-   it does not define dedicated test, build, or production start scripts.
+9. **Test/build scripts:** the backend package defines `dev` and `start`
+   commands, but does not define dedicated test or build scripts.

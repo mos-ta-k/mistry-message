@@ -128,7 +128,8 @@ npm run dev
 ```
 
 Open the Vite URL shown in the frontend terminal (normally
-`http://localhost:5173`). The backend currently listens on port `5000`.
+`http://localhost:5173`). The backend listens on `PORT`, or `5000` if it is
+unset.
 
 The backend initializes its database tables during startup. The frontend
 provides a Vite proxy for `/api`, but its API client uses `VITE_APP_URL`; the
@@ -155,7 +156,7 @@ dashboard to copy your public link and manage received messages.
   anonymous messages.
 - Configure production secrets in the hosting provider's secret manager.
 - The backend currently has production-readiness caveats, including permissive
-  CORS behavior, a hard-coded listen port, and a message endpoint without its
+  CORS behavior and a message endpoint without its
   stricter route-specific limiter. Review the backend's current implementation
   caveats in [backend documentation](./Backend/README.md#current-implementation-caveats)
   before deploying.
@@ -164,11 +165,12 @@ dashboard to copy your public link and manage received messages.
 
 | Directory | Command | Description |
 |---|---|---|
-| `Backend` | `npm run dev` | Start backend with nodemon |
+| `Backend` | `npm run dev` | Start backend with Node.js watch mode for development |
+| `Backend` | `npm start` | Start backend without watch mode for production |
 | `Frontend` | `npm run dev` | Start Vite development server |
 | `Frontend` | `npm run build` | Create the optimized frontend build in `Frontend/dist` |
 | `Frontend` | `npm run preview` | Preview the built frontend locally |
 
-The backend package currently does not define dedicated build or test scripts.
+The backend package does not define dedicated build or test scripts.
 For backend setup, endpoint details, request/response examples, and model/service
 documentation, see [Backend/README.md](./Backend/README.md).
