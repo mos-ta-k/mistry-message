@@ -47,7 +47,7 @@ PASSWORD=replace-with-a-secret
 DB_PORT=5432
 JWT_SECRET=replace-with-a-long-random-secret
 NODE_ENV=development
-CLIENT_URL=http://localhost:5173
+CLIENT_URL=https://mistry-message-frontend.onrender.com
 MAIL_USER=sender@example.com
 MAIL_PASS=replace-with-smtp-password
 MAIL_HOST=smtp.example.com
@@ -65,7 +65,7 @@ MAIL_PORT=587
 | `DB_PORT`                                                       | PostgreSQL port.                                                                                                                              |
 | `JWT_SECRET`                                                    | Secret used to sign and verify access JWTs. Keep it private and sufficiently random.                                                          |
 | `NODE_ENV`                                                      | Cookie security behavior; set to `production` in production.                                                                                  |
-| `CLIENT_URL`                                                    | Added to the CORS allowlist, although current CORS code accepts all origins.                                                                  |
+| `CLIENT_URL`                                                    | Frontend origin allowed by CORS. A comma-separated list may be used for multiple origins; URL paths/trailing slashes are normalized to origins. |
 | `MAIL_USER` or `GMAIL_USER`                                     | Sender email account.                                                                                                                         |
 | `MAIL_PASS`                                                     | SMTP password when Gmail OAuth2 is not configured.                                                                                            |
 | `MAIL_HOST`                                                     | Optional SMTP host; defaults to `smtp.gmail.com`.                                                                                             |
@@ -995,9 +995,13 @@ configuration outside the repository.
 
 1. **Port:** `server.js` listens on `process.env.PORT` when it is a valid
    numeric value and otherwise falls back to `5000`.
-2. **CORS:** `app.js` includes local origins and `CLIENT_URL`, but the callback
-   currently returns success for every origin. Credentials are enabled. Restrict
-   accepted origins before production use.
+2. **CORS:** `app.js` allows the configured `CLIENT_URL` (one or more
+   comma-separated origins), the deployed frontend origin, and local
+   development origins only outside production. It enables credentials and
+   normalizes configured URLs to browser origins. In production, set `CLIENT_URL`
+   to the frontend's exact public origin; the frontend must set
+   `VITE_APP_URL` to the backend public URL and be rebuilt after that value
+   changes.
 3. **Message abuse protection:** the frontend's `/api/messages` submission
    route has only the global limiter. The stricter `messageLimiter` applies to
    `/api/users/:username/messages`.

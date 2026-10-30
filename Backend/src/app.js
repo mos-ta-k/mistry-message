@@ -36,24 +36,48 @@ const app = express();
 
 app.use(helmet());
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  process.env.CLIENT_URL,
-].filter(Boolean);
+const productionClientOrigin = "https://mistry-message-frontend.onrender.com";
+const developmentOrigins =
+  process.env.NODE_ENV === "production"
+    ? []
+    : [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+      ];
+const configuredOrigins = (process.env.CLIENT_URL || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+  .map((origin) => {
+    let url;
+    try {
+      url = new URL(origin);
+    } catch {
+      throw new Error(`Invalid CLIENT_URL origin: ${origin}`);
+    }
+
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      throw new Error(`CLIENT_URL must use HTTP or HTTPS: ${origin}`);
+    }
+
+    return url.origin;
+  });
+const allowedOrigins = new Set([
+  productionClientOrigin,
+  ...developmentOrigins,
+  ...configuredOrigins,
+]);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow requests with no origin (like mobile apps, curl, or same-origin)
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(null, true); // Permissive in dev to avoid CORS friction
+      callback(null, !origin || allowedOrigins.has(origin));
     },
     credentials: true,
+    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 

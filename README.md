@@ -103,13 +103,16 @@ Alternatively, configure Gmail OAuth with `GMAIL_USER`,
 
 The frontend reads `VITE_APP_URL` as the API base URL, then appends endpoint
 paths such as `/auth/login`. Because the backend mounts routes below `/api`,
-include `/api` in this value. Create `Frontend/.env`:
+the frontend adds `/api` automatically if it is omitted. For local development,
+create `Frontend/.env`:
 
 ```dotenv
 VITE_APP_URL=http://localhost:5000/api
 ```
 
-Restart Vite after changing environment variables.
+Restart Vite after changing environment variables. Vite embeds this value into
+the frontend bundle, so set the production value in the frontend hosting
+environment and rebuild/redeploy the frontend whenever it changes.
 
 ### Start both applications
 
@@ -155,9 +158,12 @@ dashboard to copy your public link and manage received messages.
 - Never send passwords, financial details, or other sensitive information in
   anonymous messages.
 - Configure production secrets in the hosting provider's secret manager.
-- The backend currently has production-readiness caveats, including permissive
-  CORS behavior and a message endpoint without its
-  stricter route-specific limiter. Review the backend's current implementation
+- Set the backend's `CLIENT_URL` to the exact public frontend origin (for
+  example, `https://mistry-message-frontend.onrender.com`) and set
+  `NODE_ENV=production`. Set frontend `VITE_APP_URL` to the backend public URL;
+  `/api` may be included or omitted.
+- The backend still has a message endpoint without its stricter route-specific
+  limiter. Review the backend's current implementation
   caveats in [backend documentation](./Backend/README.md#current-implementation-caveats)
   before deploying.
 

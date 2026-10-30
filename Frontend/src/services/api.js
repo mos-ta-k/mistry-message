@@ -1,4 +1,8 @@
-export const API_URL = import.meta.env.VITE_APP_URL || "http://localhost:5000";
+const configuredApiUrl = import.meta.env.VITE_APP_URL || "http://localhost:5000";
+const normalizedApiUrl = configuredApiUrl.replace(/\/+$/, "");
+export const API_URL = normalizedApiUrl.endsWith("/api")
+  ? normalizedApiUrl
+  : `${normalizedApiUrl}/api`;
 
 class ApiService {
   constructor() {
@@ -32,6 +36,7 @@ class ApiService {
     try {
       const response = await fetch(url, {
         ...options,
+        credentials: "include",
         headers,
       });
 
