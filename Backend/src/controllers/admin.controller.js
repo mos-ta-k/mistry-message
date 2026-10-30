@@ -103,7 +103,7 @@ export const updateAdminHandle = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
-    message: `Your custom link is now: /u/${cleanHandle}`,
+    message: `Your custom link is now: /?to=${encodeURIComponent(cleanHandle)}`,
     user: rows[0],
   });
 });

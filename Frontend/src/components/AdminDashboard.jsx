@@ -127,7 +127,7 @@ export default function AdminDashboard({ adminUser, onUserUpdated, onSessionExpi
 
   // Copy Custom URL
   const currentHandle = adminUser?.username || 'admin';
-  const customUrl = `${window.location.origin}/u/${currentHandle}`;
+  const customUrl = `${window.location.origin}/?to=${encodeURIComponent(currentHandle)}`;
 
   const handleCopyCustomUrl = () => {
     navigator.clipboard.writeText(customUrl);
@@ -248,7 +248,7 @@ export default function AdminDashboard({ adminUser, onUserUpdated, onSessionExpi
                   <Copy size={13} />
                 </button>
                 <a
-                  href={`/u/${currentHandle}`}
+                  href={customUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="btn-secondary"

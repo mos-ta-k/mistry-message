@@ -140,11 +140,11 @@ legacy alias) to target the backend API.
 
 ## Main pages
 
-| Page | Purpose |
-|---|---|
-| `/` | Public anonymous-message form for the default recipient |
-| `/u/<username>` | Public form for a specific recipient |
-| `/admin` | Registration, email verification, sign-in, and admin dashboard |
+| Page          | Purpose                                                        |
+| ------------- | -------------------------------------------------------------- |
+| `/`           | Public anonymous-message form for the default recipient        |
+| `/<username>` | Public form for a specific recipient                           |
+| `/admin`      | Registration, email verification, sign-in, and admin dashboard |
 
 Use the **Admin** navigation action to open `/admin`. After signing in, use the
 dashboard to copy your public link and manage received messages.
@@ -170,13 +170,13 @@ dashboard to copy your public link and manage received messages.
 
 ## Developer commands
 
-| Directory | Command | Description |
-|---|---|---|
-| `Backend` | `npm run dev` | Start backend with Node.js watch mode for development |
-| `Backend` | `npm start` | Start backend without watch mode for production |
-| `Frontend` | `npm run dev` | Start Vite development server |
-| `Frontend` | `npm run build` | Create the optimized frontend build in `Frontend/dist` |
-| `Frontend` | `npm run preview` | Preview the built frontend locally |
+| Directory  | Command           | Description                                            |
+| ---------- | ----------------- | ------------------------------------------------------ |
+| `Backend`  | `npm run dev`     | Start backend with Node.js watch mode for development  |
+| `Backend`  | `npm start`       | Start backend without watch mode for production        |
+| `Frontend` | `npm run dev`     | Start Vite development server                          |
+| `Frontend` | `npm run build`   | Create the optimized frontend build in `Frontend/dist` |
+| `Frontend` | `npm run preview` | Preview the built frontend locally                     |
 
 The backend package does not define dedicated build or test scripts.
 For backend setup, endpoint details, request/response examples, and model/service

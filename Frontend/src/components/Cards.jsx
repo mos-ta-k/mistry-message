@@ -135,7 +135,7 @@ const createShareImage = async (content, username) => {
   context.fillText(`SEND ${username ? `@${username}` : 'ME'} A MESSAGE`, cardX + 62, cardY + cardHeight - 116);
   context.fillStyle = '#71817C';
   context.font = '400 20px "Plus Jakarta Sans", Arial, sans-serif';
-  context.fillText(`${window.location.host}/u/${username}`, cardX + 62, cardY + cardHeight - 73);
+  context.fillText(`${window.location.host}/?to=${encodeURIComponent(username)}`, cardX + 62, cardY + cardHeight - 73);
 
   return contextCanvas.toDataURL('image/png');
 };
@@ -200,7 +200,7 @@ export default function MessageCard({
   const [shareError, setShareError] = useState('');
   const [shareFeedback, setShareFeedback] = useState('');
   const time = formatTime(message.created_at);
-  const shareText = `Someone sent me an anonymous message:\n\n"${message.content}"\n\nSend me one: ${window.location.origin}/u/${username}`;
+  const shareText = `Someone sent me an anonymous message:\n\n"${message.content}"\n\nSend me one: ${window.location.origin}/?to=${encodeURIComponent(username)}`;
 
   useEffect(() => {
     if (!shareOpen) return undefined;
